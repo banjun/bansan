@@ -1,5 +1,5 @@
 #!/bin/sh
-":" //#; exec swift -F "$(dirname $0)/Carthage/Build/Mac" "$0" "$@"
+":" //#; exec swift -F "$(dirname $(readlink $0 || echo $0))/Carthage/Build/Mac" "$0" "$@"
 import Foundation
 import SourceKittenFramework
 
