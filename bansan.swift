@@ -52,8 +52,8 @@ func check(file: File) {
                     }
                 }
                 if !foundSuperCall {
-                    let characterOffset = Int(structure["key.offset"] as? Int64 ?? 0)
-                    let line = file.contents.lineAndCharacterForCharacterOffset(characterOffset)?.line ?? 1
+                    let byteOffset = Int(structure["key.offset"] as? Int64 ?? 0)
+                    let line = file.contents.lineAndCharacterForByteOffset(byteOffset)?.line ?? 1
                     print("\(file.path!):\(line): warning: \(name) requires super call")
                 }
         }
