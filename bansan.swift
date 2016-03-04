@@ -1,5 +1,5 @@
 #!/bin/sh
-":" //#; exec swift -F "$(dirname $(readlink $0 || echo $0))/Carthage/Build/Mac" "$0" "$@"
+":" //#; exec swift -sdk $(xcrun --sdk macosx --show-sdk-path) -F "$(dirname $(readlink $0 || echo $0))/Carthage/Build/Mac" "$0" "$@"
 import Foundation
 import SourceKittenFramework
 
@@ -51,10 +51,11 @@ func check(file: File) {
                             foundSuperCall = true
                     }
                 }
-                if !foundSuperCall { print("\u{1b}[31m", terminator: "") }
-                print("\(file.path!).\(name) calls super = \(foundSuperCall)", terminator: "")
-                if !foundSuperCall { print("\u{1b}[0m", terminator: "") }
-                print("")
+                if !foundSuperCall {
+                    let characterOffset = Int(structure["key.offset"] as? Int64 ?? 0)
+                    let line = file.contents.lineAndCharacterForCharacterOffset(characterOffset)?.line ?? 1
+                    print("\(file.path!):\(line): warning: \(name) requires super call")
+                }
         }
     }
 }
