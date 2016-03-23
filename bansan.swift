@@ -1,5 +1,5 @@
 #!/bin/sh
-":" //#; exec swift -sdk $(xcrun --sdk macosx --show-sdk-path) -F "$(dirname $(readlink $0 || echo $0))/Carthage/Build/Mac" "$0" "$@"
+":" //#; exec swift -sdk $(xcrun --sdk macosx --show-sdk-path) -F "$(dirname $(readlink $0 || echo $0))/Carthage/Build/Mac" -target x86_64-apple-macosx10.10 "$0" "$@"
 import Foundation
 import SourceKittenFramework
 
