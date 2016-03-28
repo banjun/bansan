@@ -1,5 +1,7 @@
 #!/bin/sh
-":" //#; exec swift -sdk $(xcrun --sdk macosx --show-sdk-path) -F "$(dirname $(readlink $0 || echo $0))/Carthage/Build/Mac" -target x86_64-apple-macosx10.10 "$0" "$@"
+":" //#; DIR=$(dirname $(readlink $0 || echo $0))
+":" //#; [ $1 = "setup" ] && { ruby $DIR/bansan-setup.rb; exit $?; }
+":" //#; exec swift -sdk $(xcrun --sdk macosx --show-sdk-path) -F "$DIR/Carthage/Build/Mac" -target x86_64-apple-macosx10.10 "$0" "$@"
 import Foundation
 import SourceKittenFramework
 
