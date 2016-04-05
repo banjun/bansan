@@ -13,6 +13,7 @@ bansan checks swift code structures instead of your eyes.
     * `viewDidAppear(_:)`
     * `viewWillDisappear(_:)`
     * `viewDidDisappear(_:)`
+* `lazy var` initialization caused in `deinit` whose initialization expression contains reference to `self`
 
 ## Usage
 
@@ -28,7 +29,19 @@ carthage bootstrap
 
 ### Xcode
 
-Add `Run Script` Build Phase executed by `/bin/zsh`:
+```
+ln -s /path/to/bansan.swift /path/to/bin/bansan
+```
+
+Add build phase to xcodeproject in current working directory:
+
+```
+bansan setup
+```
+
+or
+
+Manually add `Run Script` Build Phase executed by `/bin/zsh`:
 
 ```
 if which bansan >/dev/null; then
@@ -38,4 +51,3 @@ echo "warning: bansan does not exist, download from https://github.com/banjun/ba
 fi
 ```
 
-with `ln -s /path/to/bansan.swift /path/to/bin/bansan`.
