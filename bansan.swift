@@ -1,9 +1,10 @@
 #!/bin/sh
 ":" //#; DIR=$(dirname $(readlink $0 || echo $0))
-":" //#; [ $1 = "setup" ] && { ruby $DIR/bansan-setup.rb; exit $?; }
+":" //#; [ "$1" = "setup" ] && exec ruby $DIR/bansan-setup.rb
 ":" //#; exec swift -sdk $(xcrun --sdk macosx --show-sdk-path) -F "$DIR/Carthage/Build/Mac" -target x86_64-apple-macosx10.10 "$0" "$@"
 import Foundation
 import SourceKittenFramework
+
 
 
 func traverse(substructures: [SourceKitRepresentable],
