@@ -66,37 +66,103 @@ func check(file: File) {
     // check deinit initialized lazy var referencing self
     var lazyVarsRefsSelf = [String]()
     traverse(substructures) { structure, substructures in
-        guard let kind = structure["key.kind"] as? String,
-            let name = structure["key.name"] as? String,
-            let attrs = structure["key.attributes"] as? [SourceKitRepresentable] else {
-                return
-        }
-        let attributes = attrs.flatMap({(($0 as? [String: SourceKitRepresentable]) ?? [:]).values})
-
-        if attributes.contains({($0 as? String) == "source.decl.attribute.lazy"}) &&
-            kind == "source.lang.swift.decl.var.instance" {
-                // TODO: match only if its definition expr contains self
-                lazyVarsRefsSelf.append(name)
+        let lazyVarDecls = (substructures ?? []).filter {$0.isLazyVarDecl}
+        for lazyVarDecl in lazyVarDecls {
+            guard let declName = lazyVarDecl.name,
+                let declRange = lazyVarDecl.range else { continue }
+            let overlaps = (substructures ?? []).filter {
+                return $0.range?.overlap(declRange) == true
+            }
+            for rhs in overlaps {
+                // identifier check for more soundness
+                if rhs.name?.containsString("self") == true {
+                    lazyVarsRefsSelf.append(declName)
+                }
+            }
         }
     }
     traverse(substructures) { structure, substructures in
-        guard let kind = structure["key.kind"] as? String,
-            let name = structure["key.name"] as? String else {
-                return
-        }
-        guard name == "deinit" &&
-            kind == "source.lang.swift.decl.function.method.instance" else {
-                return
-        }
-        traverse(substructures ?? []) { descendant, substructures in
-            // TODO: matching to identifiers
-            guard let descendantName = descendant["key.name"] as? String else { return }
-            if lazyVarsRefsSelf.contains({descendantName.containsString($0)}) {
-                let descendantOffset = Int(descendant["key.offset"] as? Int64 ?? 0)
-                let line = file.contents.lineAndCharacterForByteOffset(descendantOffset)?.line ?? 1
-                print("\(file.path!):\(line): warning: lazy var \(descendantName) referencing self cannot be initialized in deinit")
+        guard structure.isDeinit else { return }
+        guard let deinitRange = structure.range else { return }
+
+        let syntaxMap = SyntaxMap(file: file)
+
+        for token in syntaxMap.tokens {
+            guard token.type == "source.lang.swift.syntaxtype.identifier" else { continue }
+            guard token.range.overlap(deinitRange) else { continue }
+            guard let name = file.contents.substringWithByteRange(start: token.offset, length: token.length) else { continue }
+            if lazyVarsRefsSelf.contains(name) {
+                let line = file.contents.lineAndCharacterForByteOffset(token.offset)?.line ?? 1
+                print("\(file.path!):\(line): warning: lazy var \(name) referencing self cannot be initialized in deinit")
             }
         }
+    }
+}
+
+
+extension SourceKitRepresentable {
+    var dictionary: [String: SourceKitRepresentable]? {
+        return self as? [String: SourceKitRepresentable]
+    }
+
+    var kind: SourceKitRepresentable? {
+        return dictionary?["key.kind"]
+    }
+
+    func isKindOf(kind: String) -> Bool {
+        return self.kind?.isEqualTo(kind) == Bool?(true)
+    }
+
+    var name: String? {
+        return dictionary?["key.name"] as? String
+    }
+
+    var offset: Int64? {
+        return dictionary?["key.offset"] as? Int64
+    }
+
+    var length: Int64? {
+        return dictionary?["key.length"] as? Int64
+    }
+
+    var attributes: [SourceKitRepresentable]? {
+        return dictionary?["key.attributes"] as? [SourceKitRepresentable]
+    }
+
+    func containsAttr(attr: String) -> Bool {
+        return attributes?.contains {
+            $0.dictionary?["key.attribute"]?.isEqualTo(attr) == true
+        } == true
+    }
+
+    var range: Range<Int64>? {
+        guard let offset = offset,
+            let length = length else { return nil }
+        return offset..<(offset + length)
+    }
+
+    var isLazyVarDecl: Bool {
+        return isKindOf("source.lang.swift.decl.var.instance") &&
+            containsAttr("source.decl.attribute.lazy")
+    }
+
+    var isDeinit: Bool {
+        return name == "deinit" &&
+            isKindOf("source.lang.swift.decl.function.method.instance")
+    }
+}
+
+
+extension SyntaxToken {
+    var range: Range<Int64> {
+        return Int64(offset)..<(Int64(offset) + Int64(length))
+    }
+}
+
+
+extension Range where Element: IntegerType {
+    func overlap(another: Range) -> Bool {
+        return !Set(self).intersect(Set(another)).isEmpty
     }
 }
 
