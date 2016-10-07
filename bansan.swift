@@ -7,22 +7,22 @@ import SourceKittenFramework
 
 
 
-func traverse(substructures: [SourceKitRepresentable],
-    @noescape block: (structure: [String: SourceKitRepresentable], substructures: [SourceKitRepresentable]?) -> Void) {
+func traverse(_ substructures: [SourceKitRepresentable],
+    block: ((structure: [String: SourceKitRepresentable], substructures: [SourceKitRepresentable]?)) -> Void) {
         for case let ss as [String: SourceKitRepresentable] in substructures {
             guard let substructures = ss["key.substructure"] as? [SourceKitRepresentable] else {
                 //                let kind = ss[SwiftDocKey.Kind.rawValue] ?? "(kind)"
                 //                let name = ss[SwiftDocKey.Name.rawValue] ?? "(name)"
                 //                NSLog("%@", "\(name)(\(kind)) is a bottom")
-                block(structure: ss, substructures: nil)
+                block((structure: ss, substructures: nil))
                 continue
             }
-            block(structure: ss, substructures: substructures)
+            block((structure: ss, substructures: substructures))
             traverse(substructures, block: block)
         }
 }
 
-func check(file: File) {
+func check(_ file: File) {
     let s = Structure(file: file)
     let substructures = s.dictionary["key.substructure"] as? [SourceKitRepresentable] ?? []
 
@@ -43,16 +43,16 @@ func check(file: File) {
             "viewDidDisappear(_:)",
         ]
 
-        if attributes.contains({($0 as? String) == "source.decl.attribute.override"}) &&
+        if attributes.contains(where: {($0 as? String) == "source.decl.attribute.override"}) &&
             kind == "source.lang.swift.decl.function.method.instance" &&
-            superCallChecked.contains({$0 == name}) {
+            superCallChecked.contains(where: {$0 == name}) {
 
                 var foundSuperCall = false
                 traverse(substructures ?? []) { descendant, substructures in
                     let descendantKind = descendant["key.kind"] as? String
                     let descendantName = descendant["key.name"] as? String
                     if descendantKind == "source.lang.swift.expr.call" &&
-                        descendantName == "super.\(name.substringToIndex(name.rangeOfString("(")!.startIndex))" {
+                        descendantName == "super.\(name.substring(to: name.range(of: "(")!.lowerBound))" {
                             foundSuperCall = true
                     }
                 }
@@ -72,11 +72,11 @@ func check(file: File) {
             guard let declName = lazyVarDecl.name,
                 let declRange = lazyVarDecl.range else { continue }
             let overlaps = (substructures ?? []).filter {
-                return $0.range?.overlap(declRange) == true
+                return $0.range?.overlaps(declRange) == true
             }
             for rhs in overlaps {
                 // identifier check for more soundness
-                if rhs.name?.containsString("self") == true {
+                if rhs.name?.contains("self") == true {
                     lazyVarsRefsSelf.append(declName)
                 }
             }
@@ -90,7 +90,7 @@ func check(file: File) {
 
         for token in syntaxMap.tokens {
             guard token.type == "source.lang.swift.syntaxtype.identifier" else { continue }
-            guard token.range.overlap(deinitRange) else { continue }
+            guard token.range.overlaps(deinitRange) else { continue }
             guard let name = file.contents.substringWithByteRange(start: token.offset, length: token.length) else { continue }
             if lazyVarsRefsSelf.contains(name) {
                 let line = file.contents.lineAndCharacterForByteOffset(token.offset)?.line ?? 1
@@ -110,7 +110,7 @@ extension SourceKitRepresentable {
         return dictionary?["key.kind"]
     }
 
-    func isKindOf(kind: String) -> Bool {
+    func isKindOf(_ kind: String) -> Bool {
         return self.kind?.isEqualTo(kind) == Bool?(true)
     }
 
@@ -130,7 +130,7 @@ extension SourceKitRepresentable {
         return dictionary?["key.attributes"] as? [SourceKitRepresentable]
     }
 
-    func containsAttr(attr: String) -> Bool {
+    func containsAttr(_ attr: String) -> Bool {
         return attributes?.contains {
             $0.dictionary?["key.attribute"]?.isEqualTo(attr) == true
         } == true
@@ -161,14 +161,7 @@ extension SyntaxToken {
 }
 
 
-extension Range where Element: IntegerType {
-    func overlap(another: Range) -> Bool {
-        return !Set(self).intersect(Set(another)).isEmpty
-    }
-}
-
-
-let args = Process.arguments.dropFirst(1)
+let args = CommandLine.arguments.dropFirst(1)
 for case let file? in args.map({File(path: $0)}) {
     check(file)
 }

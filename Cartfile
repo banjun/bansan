@@ -1,1 +1,2 @@
-github "jpsim/SourceKitten"
+github "jpsim/SourceKitten" "master"
+github "drmohundro/SWXMLHash"
