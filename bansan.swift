@@ -58,7 +58,7 @@ func check(_ file: File) {
                 }
                 if !foundSuperCall {
                     let byteOffset = Int(structure["key.offset"] as? Int64 ?? 0)
-                    let line = file.contents.lineAndCharacterForByteOffset(byteOffset)?.line ?? 1
+                    let line = file.contents.lineAndCharacter(forByteOffset: byteOffset)?.line ?? 1
                     print("\(file.path!):\(line): warning: \(name) requires super call")
                 }
         }
@@ -93,7 +93,7 @@ func check(_ file: File) {
             guard token.range.overlaps(deinitRange) else { continue }
             guard let name = file.contents.substringWithByteRange(start: token.offset, length: token.length) else { continue }
             if lazyVarsRefsSelf.contains(name) {
-                let line = file.contents.lineAndCharacterForByteOffset(token.offset)?.line ?? 1
+                let line = file.contents.lineAndCharacter(forByteOffset: token.offset)?.line ?? 1
                 print("\(file.path!):\(line): warning: lazy var \(name) referencing self cannot be initialized in deinit")
             }
         }
