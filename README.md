@@ -19,8 +19,12 @@ bansan checks swift code structures instead of your eyes.
 
 ### Command Line
 
+bansan.swift is executable.
+Swift Package Manager will setup all for you.
+
 ```
-# bansan.swift is executable. Swift Package Manager will setup all for you.
+git clone https://github.com/banjun/bansan.git
+cd bansan
 ./bansan.swift YourViewController.swift
 ```
 
