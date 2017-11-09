@@ -20,10 +20,7 @@ bansan checks swift code structures instead of your eyes.
 ### Command Line
 
 ```
-# clone and install dependencies
-carthage bootstrap
-
-# bansan.swift is executable
+# bansan.swift is executable. Swift Package Manager will setup all for you.
 ./bansan.swift YourViewController.swift
 ```
 
