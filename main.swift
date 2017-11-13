@@ -1,7 +1,7 @@
 #!/bin/sh
 ":" //#; DIR=$(dirname $(readlink $0 || echo $0))
 ":" //#; [ "$1" = "setup" ] && exec ruby $DIR/bansan-setup.rb
-":" //#; swift build --package-path "$DIR" -Xswiftc -suppress-warnings && exec "$DIR/.build/debug/bansan" "$@"
+":" //#; swift build --package-path "$DIR" -Xswiftc -suppress-warnings -Xswiftc -target -Xswiftc x86_64-apple-macosx10.12 && exec "$DIR/.build/debug/bansan" "$@"
 import Foundation
 import SourceKittenFramework
 
