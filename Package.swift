@@ -9,7 +9,7 @@ let package = Package(
         .executable(name: "bansan", targets: ["bansan"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/jpsim/SourceKitten", from: "0.18.2"),
+        .package(url: "https://github.com/jpsim/SourceKitten", .upToNextMajor(from: "0.18.2")),
     ],
     targets: [
         .target(

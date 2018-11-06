@@ -23,7 +23,7 @@ func traverse(_ substructures: [SourceKitRepresentable],
 }
 
 func check(_ file: File) {
-    let s = Structure(file: file)
+    let s = try! Structure(file: file)
     let substructures = s.dictionary["key.substructure"] as? [SourceKitRepresentable] ?? []
 
     // check super call requirements
@@ -86,7 +86,7 @@ func check(_ file: File) {
         guard structure.isDeinit else { return }
         guard let deinitRange = structure.range else { return }
 
-        let syntaxMap = SyntaxMap(file: file)
+        let syntaxMap = try! SyntaxMap(file: file)
 
         for token in syntaxMap.tokens {
             guard token.type == "source.lang.swift.syntaxtype.identifier" else { continue }
